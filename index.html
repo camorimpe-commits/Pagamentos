@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel de Execução da Despesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#18212f;--mut:#667085;--line:#e4e7ec;--soft:#f0f2f5;--emp:#3b6fd8;--liq:#d99a2b;--pag:#1d9a74}
+@media(prefers-color-scheme:dark){:root{--bg:#0f141b;--card:#171e28;--ink:#e8ecf2;--mut:#93a0b3;--line:#262f3c;--soft:#1f2834;--emp:#6b94ee;--liq:#e8b04f;--pag:#3dbb94}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button,input{font:inherit;color:inherit}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line);background:var(--card)}
+h1{font-size:19px;margin:0;font-weight:600}
+header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+.hr{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer}
+.btn:hover{background:var(--soft)}
+:focus-visible{outline:2px solid var(--emp);outline-offset:2px}
+.wrap{display:grid;grid-template-columns:250px 1fr;gap:24px;padding:24px 28px;max-width:1500px;margin:0 auto}
+aside{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:12px}
+.f{position:relative}
+.f label{display:block;font-size:12.5px;color:var(--mut);margin:0 0 4px 2px}
+.fb{width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 30px 8px 11px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.fb::after{content:"";position:absolute;right:12px;top:50%;width:6px;height:6px;border:solid var(--mut);border-width:0 1.5px 1.5px 0;transform:translateY(-70%) rotate(45deg)}
+.fb.on{border-color:var(--emp);box-shadow:inset 3px 0 0 var(--emp)}
+.fp{position:absolute;z-index:20;left:0;right:0;top:100%;margin-top:4px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:8px}
+.fp input[type=search]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:var(--bg);margin-bottom:6px}
+.fl{max-height:240px;overflow:auto}
+.fl label{display:flex;gap:8px;align-items:flex-start;margin:0;padding:5px 4px;border-radius:6px;cursor:pointer;color:var(--ink);font-size:13px}
+.fl label:hover{background:var(--soft)}
+.fl input{margin-top:3px}
+.fc{width:100%;margin-top:6px;border:0;background:none;color:var(--emp);cursor:pointer;padding:6px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.k{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;border-top:3px solid var(--c)}
+.k span{color:var(--mut);font-size:13px}
+.k b{display:block;font-size:26px;font-weight:600;margin:4px 0 2px;letter-spacing:-.01em}
+.k small{color:var(--mut)}
+.bar{height:5px;background:var(--soft);border-radius:3px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px}
+.card h2{font-size:15px;margin:0;font-weight:600}
+.ch{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.seg{display:inline-flex;background:var(--soft);border-radius:8px;padding:2px}
+.seg button{border:0;background:none;padding:5px 11px;border-radius:6px;cursor:pointer;color:var(--mut)}
+.seg button.a{background:var(--card);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.cv{position:relative;height:300px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis}
+th{color:var(--mut);font-weight:500;cursor:pointer;user-select:none}
+.n{text-align:right}
+.pg{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--mut)}
+.ti{padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);min-width:220px}
+#msg{margin:0 28px;padding:12px 14px;border-radius:8px;background:#fdecea;color:#8a1c12;display:none;max-width:1444px}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:16px}aside{position:static;display:grid;grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:1fr}header{padding:14px 16px;flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Execução da despesa</h1><p>Empenho, liquidação e pagamento · fonte: Google Sheets</p></div>
+  <div class="hr"><span id="upd">Carregando…</span><button class="btn" id="rf">Atualizar agora</button></div>
+</header>
+<div id="msg" role="alert"></div>
+<div class="wrap">
+  <aside id="filters" aria-label="Filtros"></aside>
+  <main>
+    <section class="kpis" id="kpis"></section>
+    <section class="card">
+      <div class="ch"><h2>Evolução mensal</h2></div>
+      <div class="cv"><canvas id="c1"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2 id="rt">Maiores valores</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><div class="seg" id="sd"></div><div class="seg" id="sm"></div></div>
+      </div>
+      <div class="cv"><canvas id="c2"></canvas></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>Detalhamento <small id="cnt" style="color:var(--mut);font-weight:400"></small></h2>
+        <div style="display:flex;gap:10px"><input class="ti" id="q" type="search" placeholder="Buscar credor, elemento, empenho…"><button class="btn" id="ex">Exportar CSV</button></div>
+      </div>
+      <div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div>
+      <div class="pg"><span id="pi"></span><span><button class="btn" id="pp">Anterior</button> <button class="btn" id="pn">Próxima</button></span></div>
+    </section>
+  </main>
+</div>
+<script>
+const F=[['ano','Por ano'],['status','Por status'],['fonte','Por fonte'],['credor','Por credor'],['grupo','Por grupo'],['elemento','Por elemento'],['tema','Por tema']];
+const M=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MET=[['emp','Empenho','--emp'],['liq','Liquidação','--liq'],['pag','Pagamento','--pag']];
+const DIM=[['credor','Credor'],['elemento','Elemento'],['grupo','Grupo'],['tema','Tema'],['fonte','Fonte']];
+const COLS=[['dk','Data','dt'],['credor','Credor'],['elemento','Elemento'],['tema','Tema'],['status','Status'],['emp','Empenho',1],['liq','Liquidação',1],['pag','Pagamento',1],['ne','Empenho nº']];
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const cmp=v=>'R$ '+new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:1}).format(v);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let rows=[],sel={},dim='credor',met='pag',sk='dk',sd=-1,pg=0,q='',first=true,c1,c2,lastFetch=0;
+
+const filtered=skip=>rows.filter(r=>F.every(([k])=>k===skip||!sel[k]||!sel[k].size||sel[k].has(r[k])));
+const sum=(a,k)=>a.reduce((s,r)=>s+r[k],0);
+
+/* ---------- filtros ---------- */
+function buildFilters(){
+  $('filters').innerHTML=F.map(([k,l])=>`<div class="f" data-k="${k}"><label>${l}</label><button class="fb"></button><div class="fp" hidden><input type="search" placeholder="Buscar…" aria-label="Buscar em ${l}"><div class="fl"></div><button class="fc">Limpar seleção</button></div></div>`).join('')+'<button class="btn" id="clr">Limpar todos os filtros</button>';
+}
+function options(k){
+  const s=new Set(filtered(k).map(r=>r[k]));(sel[k]||[]).forEach(v=>s.add(v));
+  return [...s].filter(Boolean).sort(k==='ano'?(a,b)=>b-a:(a,b)=>a.localeCompare(b,'pt-BR'));
+}
+function paintFilters(){
+  document.querySelectorAll('.f').forEach(f=>{
+    const k=f.dataset.k,s=sel[k]||new Set(),b=f.querySelector('.fb');
+    b.textContent=!s.size?'Todos':s.size===1?[...s][0]:s.size+' selecionados';
+    b.classList.toggle('on',s.size>0);
+    const p=f.querySelector('.fp');if(!p.hidden)paintList(f);
+  });
+}
+function paintList(f){
+  const k=f.dataset.k,t=f.querySelector('input').value.toLowerCase(),s=sel[k]||new Set();
+  const o=options(k).filter(v=>v.toLowerCase().includes(t));
+  f.querySelector('.fl').innerHTML=o.slice(0,150).map(v=>`<label><input type="checkbox" value="${esc(v)}" ${s.has(v)?'checked':''}><span>${esc(v)}</span></label>`).join('')+(o.length>150?`<div style="padding:6px;color:var(--mut)">+${o.length-150} — refine a busca</div>`:'')||'<div style="padding:6px;color:var(--mut)">Nada encontrado</div>';
+}
+$('filters').addEventListener('click',e=>{
+  const f=e.target.closest('.f');
+  if(e.target.id==='clr'){sel={};pg=0;paintFilters();render();return}
+  if(!f)return;
+  if(e.target.classList.contains('fb')){
+    const p=f.querySelector('.fp'),was=p.hidden;
+    document.querySelectorAll('.fp').forEach(x=>x.hidden=true);
+    p.hidden=!was;if(was){f.querySelector('input').value='';paintList(f);f.querySelector('input').focus()}
+  }
+  if(e.target.classList.contains('fc')){sel[f.dataset.k]=new Set();pg=0;paintFilters();render()}
+});
+$('filters').addEventListener('change',e=>{
+  const f=e.target.closest('.f');if(!f||e.target.type!=='checkbox')return;
+  const k=f.dataset.k;sel[k]=sel[k]||new Set();
+  e.target.checked?sel[k].add(e.target.value):sel[k].delete(e.target.value);
+  pg=0;paintFilters();render();
+});
+$('filters').addEventListener('input',e=>{if(e.target.type==='search')paintList(e.target.closest('.f'))});
+document.addEventListener('click',e=>{if(!e.target.closest('.f'))document.querySelectorAll('.fp').forEach(x=>x.hidden=true)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.fp').forEach(x=>x.hidden=true)});
+
+/* ---------- renderização ---------- */
+function render(){
+  const f=filtered(),tot={emp:sum(f,'emp'),liq:sum(f,'liq'),pag:sum(f,'pag')};
+  const pct=(a,b)=>b>0?Math.min(100,a/b*100):0,fp=v=>v.toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+  const sub={emp:`${f.length.toLocaleString('pt-BR')} lançamentos`,
+    liq:`${fp(pct(tot.liq,tot.emp))} do empenhado · a liquidar ${cmp(Math.max(0,tot.emp-tot.liq))}`,
+    pag:`${fp(pct(tot.pag,tot.liq))} do liquidado · a pagar ${cmp(Math.max(0,tot.liq-tot.pag))}`};
+  const w={emp:100,liq:pct(tot.liq,tot.emp),pag:pct(tot.pag,tot.emp)};
+  $('kpis').innerHTML=MET.map(([m,l,c])=>`<div class="k" style="--c:var(${c})"><span>${l}</span><b title="${brl(tot[m])}">${brl(tot[m])}</b><small>${sub[m]}</small><div class="bar"><i style="width:${w[m]}%"></i></div></div>`).join('');
+  charts(f);table(f);
+}
+function charts(f){
+  const grid=css('--line'),txt=css('--mut');
+  Chart.defaults.font.family="'IBM Plex Sans',sans-serif";Chart.defaults.color=txt;
+  const by=MET.map(([m])=>M.map((_,i)=>sum(f.filter(r=>r.mes===M[i]),m)));
+  const d1=MET.map(([m,l,c],j)=>({label:l,data:by[j],backgroundColor:css(c),borderRadius:3}));
+  if(!c1)c1=new Chart($('c1'),{type:'bar',data:{labels:M.map(x=>x[0].toUpperCase()+x.slice(1)),datasets:d1},options:{maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom',labels:{boxWidth:10,usePointStyle:true}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+brl(c.parsed.y)}}},scales:{y:{grid:{color:grid},ticks:{callback:cmp}},x:{grid:{display:false}}}}});
+  else{c1.data.datasets=d1;c1.options.scales.y.grid.color=grid;c1.update()}
+  const g={};f.forEach(r=>g[r[dim]]=(g[r[dim]]||0)+r[met]);
+  const top=Object.entries(g).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const col=css(MET.find(x=>x[0]===met)[2]),lab=top.map(t=>t[0].length>42?t[0].slice(0,41)+'…':t[0]);
+  const d2=[{data:top.map(t=>t[1]),backgroundColor:col,borderRadius:3}];
+  $('rt').textContent=`Top 10 por ${DIM.find(x=>x[0]===dim)[1].toLowerCase()} · ${MET.find(x=>x[0]===met)[1].toLowerCase()}`;
+  if(!c2)c2=new Chart($('c2'),{type:'bar',data:{labels:lab,datasets:d2},options:{indexAxis:'y',maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>top[i[0].dataIndex][0],label:c=>brl(c.parsed.x)}}},scales:{x:{grid:{color:grid},ticks:{callback:cmp}},y:{grid:{display:false}}}}});
+  else{c2.data.labels=lab;c2.data.datasets=d2;c2.options.plugins.tooltip.callbacks.title=i=>top[i[0].dataIndex][0];c2.options.scales.x.grid.color=grid;c2.update()}
+}
+function seg(){
+  $('sd').innerHTML=DIM.map(([k,l])=>`<button data-d="${k}" class="${k===dim?'a':''}">${l}</button>`).join('');
+  $('sm').innerHTML=MET.map(([k,l])=>`<button data-m="${k}" class="${k===met?'a':''}">${l}</button>`).join('');
+}
+$('sd').onclick=e=>{if(e.target.dataset.d){dim=e.target.dataset.d;seg();render()}};
+$('sm').onclick=e=>{if(e.target.dataset.m){met=e.target.dataset.m;seg();render()}};
+
+/* ---------- tabela ---------- */
+const PS=25;
+function tableRows(){
+  const t=q.toLowerCase();
+  let f=filtered();
+  if(t)f=f.filter(r=>(r.credor+' '+r.elemento+' '+r.tema+' '+r.ne+' '+r.nl+' '+r.pd+' '+r.ob+' '+r.nf).toLowerCase().includes(t));
+  return f.sort((a,b)=>(a[sk]>b[sk]?1:a[sk]<b[sk]?-1:0)*sd);
+}
+function table(){
+  const f=tableRows(),pages=Math.max(1,Math.ceil(f.length/PS));pg=Math.min(pg,pages-1);
+  $('th').innerHTML='<tr>'+COLS.map(([k,l,n])=>`<th data-k="${k}" class="${n===1?'n':''}">${l}${sk===k?(sd>0?' ▲':' ▼'):''}</th>`).join('')+'</tr>';
+  $('tb').innerHTML=f.slice(pg*PS,pg*PS+PS).map(r=>'<tr>'+COLS.map(([k,,n])=>{
+    const v=n===1?(r[k]?brl(r[k]):'—'):k==='dk'?r.dt:r[k];
+    return `<td class="${n===1?'n':''}" title="${esc(n===1?'':v)}">${esc(v)}</td>`}).join('')+'</tr>').join('')||'<tr><td colspan="9" style="padding:24px;text-align:center;color:var(--mut)">Nenhum lançamento com esses filtros.</td></tr>';
+  $('cnt').textContent=`· ${f.length.toLocaleString('pt-BR')} registros`;
+  $('pi').textContent=`Página ${pg+1} de ${pages}`;
+  $('pp').disabled=pg===0;$('pn').disabled=pg>=pages-1;
+}
+$('th').onclick=e=>{const k=e.target.dataset.k;if(!k)return;sd=sk===k?-sd:(['emp','liq','pag','dk'].includes(k)?-1:1);sk=k;table()};
+$('pp').onclick=()=>{pg--;table()};$('pn').onclick=()=>{pg++;table()};
+$('q').oninput=e=>{q=e.target.value;pg=0;table()};
+$('ex').onclick=()=>{
+  const h=['Data Emissão','Mês','Ano','Credor','Fonte','Grupo','Elemento','Tema','Status','Empenho','Liquidação','Pagamento','Data Pagamento','NE','NL','PD','OB'];
+  const c=v=>`"${String(v??'').replace(/"/g,'""')}"`,n=v=>String(v).replace('.',',');
+  const out=[h.map(c).join(';')].concat(tableRows().map(r=>[r.dt,r.mes,r.ano,r.credor,r.fonte,r.grupo,r.elemento,r.tema,r.status,n(r.emp),n(r.liq),n(r.pag),r.dp,r.ne,r.nl,r.pd,r.ob].map(c).join(';')));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+out.join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='despesa-filtrada.csv';a.click();
+};
+
+/* ---------- carga e atualização automática ---------- */
+async function load(){
+  try{
+    $('rf').disabled=true;
+    const r=await fetch('/api/data'),d=await r.json();
+    if(!r.ok)throw new Error(d.error||'Erro '+r.status);
+    rows=d.rows.map(x=>({...x,dk:x.dt?x.dt.split('/').reverse().join(''):''}));
+    if(first){const ys=[...new Set(rows.map(x=>x.ano))].sort();if(ys.length)sel.ano=new Set([ys[ys.length-1]]);first=false}
+    $('msg').style.display='none';
+    $('upd').textContent='Atualizado às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' · '+d.count.toLocaleString('pt-BR')+' linhas';
+    lastFetch=Date.now();paintFilters();render();
+  }catch(e){$('msg').textContent='Não foi possível carregar os dados. '+e.message;$('msg').style.display='block';$('upd').textContent='Falha ao atualizar'}
+  finally{$('rf').disabled=false}
+}
+$('rf').onclick=load;
+setInterval(load,5*60*1000);                                   // a cada 5 min
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastFetch>2*60*1000)load()});
+buildFilters();seg();load();
+</script>
+</body>
+</html>

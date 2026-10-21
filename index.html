@@ -16,6 +16,7 @@ button,input{font:inherit;color:inherit}
 header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line);background:var(--card)}
 h1{font-size:19px;margin:0;font-weight:600}
 header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+nav{display:flex;gap:6px}nav a{padding:6px 12px;border-radius:8px;color:var(--mut);text-decoration:none}nav a.a{background:var(--soft);color:var(--ink);font-weight:500}
 .hr{display:flex;align-items:center;gap:12px;color:var(--mut);font-size:13px}
 .btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer}
 .btn:hover{background:var(--soft)}
@@ -62,6 +63,7 @@ th{color:var(--mut);font-weight:500;cursor:pointer;user-select:none}
 <body>
 <header>
   <div><h1>Execução da despesa</h1><p>Empenho, liquidação e pagamento · fonte: Google Sheets</p></div>
+  <nav><a href="./" class="a">Painel</a><a href="calendario.html">Calendário</a></nav>
   <div class="hr"><span id="upd">Carregando…</span><button class="btn" id="rf">Atualizar agora</button></div>
 </header>
 <div id="msg" role="alert"></div>
@@ -212,7 +214,8 @@ $('ex').onclick=()=>{
 async function load(){
   try{
     $('rf').disabled=true;
-    const r=await fetch('/api/data'),d=await r.json();
+    const r=await fetch('/api/data'),t=await r.text();let d;
+    try{d=JSON.parse(t)}catch(_){throw new Error(r.status===404?'A rota /api/data não foi encontrada. Confirme que a pasta api/ (com data.js) está na raiz do projeto publicado.':'Resposta inesperada do servidor (código '+r.status+').')}
     if(!r.ok)throw new Error(d.error||'Erro '+r.status);
     rows=d.rows.map(x=>({...x,dk:x.dt?x.dt.split('/').reverse().join(''):''}));
     if(first){const ys=[...new Set(rows.map(x=>x.ano))].sort();if(ys.length)sel.ano=new Set([ys[ys.length-1]]);first=false}

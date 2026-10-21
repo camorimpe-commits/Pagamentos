@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calendário de pagamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2f8;--card:#fff;--ink:#18212f;--mut:#667085;--line:#dfe5ee;--soft:#eef1f6;--hd:#dfe9f8;--emp:#3b6fd8;--liq:#d99a2b;--pag:#1d9a74;--hot:#b42318;--sel:#18212f}
+@media(prefers-color-scheme:dark){:root{--bg:#0f141b;--card:#171e28;--ink:#e8ecf2;--mut:#93a0b3;--line:#262f3c;--soft:#1f2834;--hd:#1b2740;--emp:#6b94ee;--liq:#e8b04f;--pag:#3dbb94;--hot:#ff8f84;--sel:#e8ecf2}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 'IBM Plex Sans',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--emp);outline-offset:2px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:16px 24px;background:var(--hd);border-bottom:1px solid var(--line)}
+h1{font-size:19px;margin:0;font-weight:600}
+header p{margin:2px 0 0;color:var(--mut);font-size:13px}
+nav{display:flex;gap:6px}
+nav a{padding:6px 12px;border-radius:8px;color:var(--mut);text-decoration:none}
+nav a.a{background:var(--card);color:var(--ink);font-weight:500}
+.top{display:grid;grid-template-columns:1fr auto auto;gap:14px;padding:16px 24px 0}
+.info{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.info span{color:var(--mut);font-size:12.5px}
+.info b{display:block;font-size:19px;font-weight:600;margin-top:2px}
+.g{width:150px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center}
+.g span{font-size:12.5px;color:var(--mut)}
+.g svg{display:block;margin:2px auto 0;width:110px}
+.g b{font-size:15px}
+.main{display:grid;grid-template-columns:230px 1fr minmax(340px,.9fr);gap:14px;padding:14px 24px 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.side{grid-row:span 2;align-self:start;display:flex;flex-direction:column;gap:12px}
+.side label{display:block;font-size:12.5px;color:var(--mut);margin:0 0 4px 2px}
+.side select,.side input{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+.ms{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ms button{padding:8px 0;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer}
+.ms button.e{color:var(--mut)}
+.ms button.a{background:var(--sel);color:var(--card);border-color:var(--sel)}
+.ar{display:flex;gap:6px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 12px;cursor:pointer;flex:1}
+.btn:hover{background:var(--soft)}
+.cal h2{margin:0 0 12px;font-size:15px;font-weight:600;text-align:center}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cg .h{text-align:center;color:var(--mut);font-weight:500;padding:6px 0}
+.d{min-height:62px;border:1px solid transparent;border-radius:8px;background:none;padding:6px 2px;text-align:center;line-height:1.25}
+button.d{cursor:pointer;background:var(--soft)}
+button.d:hover{border-color:var(--mut)}
+.d.s{background:var(--sel);color:var(--card)}
+.d .n{font-weight:600;display:block}
+.d small{display:block;font-size:12px}
+.d.hot small{color:var(--hot);font-weight:600}
+.d.s.hot small{color:inherit}
+.tb h2{margin:0;font-size:15px;font-weight:600}
+.tb small{color:var(--mut)}
+.tw{max-height:470px;overflow:auto;margin-top:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:var(--card);color:var(--mut);font-weight:500;text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.r{text-align:right;white-space:nowrap}
+.wk{grid-column:2/4}
+.wk h2{margin:0 0 10px;font-size:15px;font-weight:600;text-align:center}
+.bars{display:flex;align-items:flex-end;justify-content:space-around;height:170px;gap:10px}
+.bw{flex:1;max-width:160px;display:flex;flex-direction:column;justify-content:flex-end;height:100%;text-align:center;font-size:12.5px}
+.bw i{display:block;background:var(--emp);border-radius:4px 4px 0 0;min-height:3px;margin:4px 0}
+.bw span{color:var(--mut)}
+#msg{margin:12px 24px 0;padding:12px 14px;border-radius:8px;background:#fdecea;color:#8a1c12;display:none}
+@media(max-width:1100px){.main{grid-template-columns:1fr;padding:14px 16px}.side{grid-row:auto}.wk{grid-column:auto}.top{grid-template-columns:1fr 1fr;padding:14px 16px 0}.info{grid-column:1/-1;grid-template-columns:1fr 1fr}.g{width:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Calendário de pagamentos</h1><p id="upd">Carregando…</p></div>
+  <nav><a href="./">Painel</a><a href="calendario.html" class="a">Calendário</a></nav>
+</header>
+<div id="msg" role="alert"></div>
+<section class="top">
+  <div class="info" id="info"></div>
+  <div class="g" id="g1"></div><div class="g" id="g2"></div>
+</section>
+<div class="main">
+  <aside class="card side">
+    <div><label for="fa">Por ano</label><select id="fa"></select></div>
+    <div><label for="ff">Por fonte</label><select id="ff"></select></div>
+    <div><label for="fc">Por credor</label><input id="fc" list="cl" placeholder="Todos" autocomplete="off"><datalist id="cl"></datalist></div>
+    <div><label>Por mês</label><div class="ms" id="ms"></div></div>
+    <div class="ar"><button class="btn" id="pv" aria-label="Mês anterior">←</button><button class="btn" id="nx" aria-label="Próximo mês">→</button></div>
+    <button class="btn" id="clr">Limpar filtros</button>
+  </aside>
+  <section class="card cal"><h2 id="ct"></h2><div class="cg" id="cg"></div></section>
+  <section class="card tb">
+    <h2 id="tt">Pagamentos</h2><small id="ts"></small>
+    <div class="tw"><table><thead><tr><th>Credor</th><th>Documento OB</th><th>Data</th><th class="r">Valor pago</th></tr></thead><tbody id="tb"></tbody></table></div>
+  </section>
+  <section class="card wk"><h2>Total pago por semana</h2><div class="bars" id="wk"></div></section>
+</div>
+<script>
+const M=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const D=['dom','seg','ter','qua','qui','sex','sáb'];
+const $=id=>document.getElementById(id);
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const nf=new Intl.NumberFormat('pt-BR',{notation:'compact',maximumFractionDigits:2});
+const cmp=v=>'R$ '+nf.format(v);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const sum=(a,k)=>a.reduce((s,r)=>s+r[k],0);
+let rows=[],S={ano:'',fonte:'',credor:'',m:0,day:null},first=true,last=0;
+
+const base=()=>rows.filter(r=>(!S.ano||r.ano===S.ano)&&(!S.fonte||r.fonte===S.fonte)&&(!S.credor||r.credor===S.credor));
+const latestMonth=y=>{const m=rows.filter(r=>r.py===+y).map(r=>r.pm);return m.length?Math.max(...m):0};
+
+function gauge(id,t,pct,c){
+  const w=Math.min(100,Math.max(0,pct));
+  $(id).innerHTML=`<span>${t}</span><svg viewBox="0 0 100 56" aria-hidden="true"><path d="M10 50A40 40 0 0 1 90 50" fill="none" stroke="var(--soft)" stroke-width="10" pathLength="100"/><path d="M10 50A40 40 0 0 1 90 50" fill="none" stroke="var(${c})" stroke-width="10" pathLength="100" stroke-dasharray="${w} 100"/></svg><b>${pct.toLocaleString('pt-BR',{maximumFractionDigits:0})}%</b>`;
+}
+
+function fillControls(){
+  const anos=[...new Set(rows.map(r=>r.ano))].sort().reverse();
+  $('fa').innerHTML=anos.map(a=>`<option ${a===S.ano?'selected':''}>${a}</option>`).join('');
+  const rA=rows.filter(r=>r.ano===S.ano);
+  const fs=[...new Set(rA.map(r=>r.fonte))].filter(Boolean).sort();
+  $('ff').innerHTML='<option value="">Todos</option>'+fs.map(f=>`<option ${f===S.fonte?'selected':''}>${esc(f)}</option>`).join('');
+  const cs=[...new Set(rA.filter(r=>!S.fonte||r.fonte===S.fonte).map(r=>r.credor))].filter(Boolean).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  $('cl').innerHTML=cs.map(c=>`<option value="${esc(c)}">`).join('');
+  $('fc').value=S.credor;
+}
+
+function render(){
+  const b=base(),Y=+S.ano,m=S.m;
+  const emp=sum(b,'emp'),liq=sum(b,'liq'),pg=sum(b,'pag');
+  const mp=b.filter(r=>r.pag>0&&r.py===Y&&r.pm===m);
+  const mTot=sum(mp,'pag');
+  $('info').innerHTML=[['Total empenho',emp],['Total liquidado',liq],['Pago no ano',pg],[`Pago em ${M[m]}/${Y}`,mTot]].map(([l,v])=>`<div><span>${l}</span><b title="${brl(v)}">${cmp(v)}</b></div>`).join('');
+  gauge('g1','Liquidado do empenho',emp?liq/emp*100:0,'--liq');
+  gauge('g2','Pago do liquidado',liq?pg/liq*100:0,'--pag');
+
+  const byDay={};mp.forEach(r=>byDay[r.pdd]=(byDay[r.pdd]||0)+r.pag);
+  const vals=Object.values(byDay).sort((a,b)=>a-b),p75=vals.length?vals[Math.floor(vals.length*.75)]:Infinity;
+  const off=new Date(Y,m,1).getDay(),nd=new Date(Y,m+1,0).getDate();
+  let h=D.map(d=>`<div class="h">${d}</div>`).join('')+'<div></div>'.repeat(off);
+  const wk={};
+  for(let d=1;d<=nd;d++){
+    const v=byDay[d]||0,w=Math.floor((off+d-1)/7)+1;wk[w]=(wk[w]||0)+v;
+    h+=v?`<button class="d ${v>=p75?'hot':''} ${S.day===d?'s':''}" data-d="${d}" title="${brl(v)}"><span class="n">${d}</span><small>${nf.format(v)}</small></button>`:`<div class="d"><span class="n">${d}</span></div>`;
+  }
+  $('cg').innerHTML=h;
+  $('ct').textContent=S.day?`Pagamentos em ${String(S.day).padStart(2,'0')}/${String(m+1).padStart(2,'0')}/${Y} somaram ${cmp(byDay[S.day]||0)}`:`Total de pagamentos de ${M[m]}/${Y} foi de ${cmp(mTot)}`;
+
+  const list=(S.day?mp.filter(r=>r.pdd===S.day):mp).sort((a,b)=>b.pag-a.pag);
+  $('tt').textContent=S.day?`Pagamentos de ${String(S.day).padStart(2,'0')}/${String(m+1).padStart(2,'0')}`:`Pagamentos de ${M[m]}/${Y}`;
+  $('ts').textContent=` ${list.length.toLocaleString('pt-BR')} registros · ${brl(sum(list,'pag'))}`+(list.length>400?' · mostrando os 400 maiores':'');
+  $('tb').innerHTML=list.slice(0,400).map(r=>`<tr><td>${esc(r.credor)}</td><td>${esc(r.ob||'—')}</td><td>${esc(r.dp)}</td><td class="r">${brl(r.pag)}</td></tr>`).join('')||'<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--mut)">Sem pagamentos neste período.</td></tr>';
+
+  const ws=Object.entries(wk).filter(e=>e[1]>0),mx=Math.max(1,...ws.map(e=>e[1]));
+  $('wk').innerHTML=ws.map(([w,v])=>`<div class="bw"><span style="color:var(--ink)">${brl(v)}</span><i style="height:${Math.max(2,v/mx*115)}px"></i><span>Semana ${w}</span></div>`).join('')||'<span style="color:var(--mut)">Sem pagamentos no mês.</span>';
+
+  const has=new Set(rows.filter(r=>r.pag>0&&r.py===Y).map(r=>r.pm));
+  const ord=[0,6,1,7,2,8,3,9,4,10,5,11];
+  $('ms').innerHTML=ord.map(i=>`<button data-m="${i}" class="${i===m?'a':has.has(i)?'':'e'}">${M[i]}</button>`).join('');
+}
+
+/* eventos */
+$('cg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;const d=+b.dataset.d;S.day=S.day===d?null:d;render()};
+$('ms').onclick=e=>{const b=e.target.closest('[data-m]');if(b){S.m=+b.dataset.m;S.day=null;render()}};
+$('pv').onclick=()=>{S.m=Math.max(0,S.m-1);S.day=null;render()};
+$('nx').onclick=()=>{S.m=Math.min(11,S.m+1);S.day=null;render()};
+$('fa').onchange=e=>{S.ano=e.target.value;S.fonte='';S.credor='';S.m=latestMonth(S.ano);S.day=null;fillControls();render()};
+$('ff').onchange=e=>{S.fonte=e.target.value;S.credor='';S.day=null;fillControls();render()};
+$('fc').oninput=e=>{const v=e.target.value;const ok=[...$('cl').options].some(o=>o.value===v);if(v===''||ok){S.credor=v;S.day=null;render()}};
+$('clr').onclick=()=>{const y=[...new Set(rows.map(r=>r.ano))].sort().pop();S={ano:y,fonte:'',credor:'',m:latestMonth(y),day:null};fillControls();render()};
+
+/* carga e atualização automática */
+async function load(){
+  try{
+    const r=await fetch('/api/data'),t=await r.text();let d;
+    try{d=JSON.parse(t)}catch(_){throw new Error(r.status===404?'A rota /api/data não foi encontrada. Confirme que a pasta api/ (com data.js) está na raiz do projeto publicado.':'Resposta inesperada do servidor (código '+r.status+').')}
+    if(!r.ok)throw new Error(d.error||'Erro '+r.status);
+    rows=d.rows.map(x=>{const p=(x.dp||'').split('/');return{...x,pdd:+p[0]||0,pm:(+p[1]||1)-1,py:+p[2]||0}});
+    if(first){const y=[...new Set(rows.map(r=>r.ano))].sort().pop();S.ano=y;S.m=latestMonth(y);first=false}
+    $('msg').style.display='none';
+    $('upd').textContent='Última atualização: '+new Date(d.updated).toLocaleString('pt-BR');
+    last=Date.now();fillControls();render();
+  }catch(e){$('msg').textContent='Não foi possível carregar os dados. '+e.message;$('msg').style.display='block';$('upd').textContent='Falha ao atualizar'}
+}
+setInterval(load,5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-last>2*60*1000)load()});
+load();
+</script>
+</body>
+</html>

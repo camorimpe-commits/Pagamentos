@@ -1,7 +1,7 @@
 // Lê a planilha publicada no Google Sheets e devolve JSON limpo.
-// Configure SHEET_ID e SHEET_GID em Vercel > Settings > Environment Variables (opcional).
-const SHEET_ID = process.env.SHEET_ID || '1uQcCEjud5tnj9vpbRzYJq-J89GMgl_3-YwoCHaurnmU';
-const SHEET_GID = process.env.SHEET_GID || '507908437';
+// Para trocar de planilha sem mexer no código, defina SHEET_CSV_URL em Vercel > Settings > Environment Variables.
+const CSV_URL = process.env.SHEET_CSV_URL ||
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vTMAJWBTMJTCZ6isLPAVkN4AUp23myTBn6-FCv-h2Ntu2H1qSaxtKPiO4GIDDbWedCO5-V6XEIgzThJ/pub?gid=507908437&single=true&output=csv';
 
 function parseCSV(t) {
   const rows = []; let r = [], f = '', q = false;
@@ -42,11 +42,10 @@ const MAP = {
 
 module.exports = async (req, res) => {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
-    const resp = await fetch(url, { redirect: 'follow' });
+    const resp = await fetch(CSV_URL, { redirect: 'follow' });
     const text = await resp.text();
     if (!resp.ok || text.trim().startsWith('<')) {
-      throw new Error('Planilha inacessível. Em "Compartilhar", use "Qualquer pessoa com o link" como Leitor.');
+      throw new Error('Planilha inacessível. Confirme em Arquivo > Compartilhar > Publicar na Web que a aba está publicada como CSV.');
     }
     const [head, ...body] = parseCSV(text);
     const keys = head.map(h => MAP[norm(h)] || null);
